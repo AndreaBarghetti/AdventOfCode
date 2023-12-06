@@ -12,4 +12,4 @@
 <img src="GIFs/day2.gif" width="250"/>
 
 #### Day6
-<img src="GIFs/day6.svg" width="250"/>
+<img src="GIFs/day6.png" width="250"/>
