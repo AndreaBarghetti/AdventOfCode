@@ -8,9 +8,5 @@
 
 ## My visualizations
 
-<img src="GIFs/day2.gif" width="300"/>
-
-<img src="GIFs/day6.png" width="300"/>
-
-<img src="GIFs/day8.gif" width="300"/>
+<img src="GIFs/day2.gif" width="300"/> <img src="GIFs/day6.png" width="300"/> <img src="GIFs/day8.gif" width="300"/>
 
