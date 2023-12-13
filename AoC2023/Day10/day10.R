@@ -52,7 +52,6 @@ bfs_pipes <- function(pipes) {
 dists = bfs_pipes(pipes)
 max(dists[dists<Inf])
 
-
 # Part 2 ####
 count_crossings <- function(string) {
   string = str_remove_all(string,"[^|LJ7F]")
@@ -75,11 +74,47 @@ insides <- ifelse(dists!=Inf,F,insides)
 
 sum(insides)
 
-
 # vis ####
-plot_matrix(dists) +
-  scale_fill_viridis_c()
+zoom_mat <- function(matrix) {
+  mr = apply(matrix,1, function(r){
+    rep(r,each=3)
+  }) %>% t()
+  mc = apply(mr,2, function(c){
+    rep(c,each=3)
+  })
+  mc
+}
 
-plot_matrix(insides) +
-  scale_fill_viridis_d()
+zoom_pipes <- function(pipes) {
   
+  types = list("L" = matrix(str_split("...##..#.","",simplify = T), nrow=3),
+               "J" = matrix(str_split(".#.##....","",simplify = T), nrow=3),
+               "7" = matrix(str_split(".#..##...","",simplify = T), nrow=3),
+               "F" = matrix(str_split("....##.#.","",simplify = T), nrow=3),
+               "|" = matrix(str_split("...###...","",simplify = T), nrow=3),
+               "-" = matrix(str_split(".#..#..#.","",simplify = T), nrow=3),
+               "S" = matrix(str_split(".#.##....","",simplify = T), nrow=3),
+               "." = matrix(str_split("#########","",simplify = T), nrow=3))
+  invtypes = map(types, function(type) {ifelse(type==".","#",".")}) 
+  apply(pipes,1,function(x){
+    invtypes[x]}) %>% 
+    map(purrr::reduce, cbind) %>% 
+    purrr::reduce(rbind)
+}
+
+dist_df <- mat_to_tibble(zoom_mat(dists))
+inout_df <- mat_to_tibble(zoom_mat(insides))
+zpipes = mat_to_tibble(zoom_pipes(clean_pipes))
+
+pipe_plot = ggplot2::ggplot(dist_df, ggplot2::aes(x = x, y = y)) + 
+  ggplot2::geom_tile(ggplot2::aes(fill = value), show.legend = F) + 
+  ggplot2::theme_void() + 
+  ggplot2::coord_equal() +
+  scale_fill_viridis_c(na.value = "transparent", option = "G", end = .9, begin = .1) +
+  geom_tile(data=inout_df %>% filter(value),fill="gold") +
+  geom_tile(data=zpipes %>% filter(value=="#"), fill="black")
+
+ggsave(plot = pipe_plot, device = "png",
+       filename = "day10.png",dpi = 300,
+       bg = "transparent",
+       path = "AoC2023/GIFs")
