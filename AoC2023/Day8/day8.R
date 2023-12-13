@@ -119,15 +119,15 @@ animation = df %>%
   ggplot(aes(x=x,y=y,color = place)) +
   geom_point(size=5, show.legend = F, aes(group = group)) +
   theme_void() +
+  geom_segment(data=places, aes(xend=lx,yend=ly), col="black", linewidth=.1) +
+  geom_segment(data=places, aes(xend=rx,yend=ry), col="black", linewidth=.1) +
   gganimate::transition_states(states = time, 
                                transition_length = 20, state_length = 1) +
   gganimate::ease_aes('linear') +
   enter_fade()+
   exit_fade() +
-  geom_segment(data=places, aes(xend=lx,yend=ly), col="black", linewidth=.1) +
-  geom_segment(data=places, aes(xend=rx,yend=ry), col="black", linewidth=.1) +
   scale_color_viridis_d()
 
 gganimate::anim_save(
-  gganimate::animate(animation, rewind = T,nframes = 300, duration = 30),
+  gganimate::animate(animation, rewind = T, duration = 40, fps=10),
   file = "AoC2023/GIFs/day8.gif")
