@@ -37,3 +37,29 @@ stars <- get_stars_coords(space, expansion = 1e6)
 
 dist(stars, method = "manhattan", diag = T, upper = F) %>% 
   as.integer() %>% sum()
+
+# vis ####
+library(gganimate)
+stars <- get_stars_coords(space, expansion = 1)
+
+stars_df = map_dfr(ceiling(seq(1,6,1)),function(exp) {
+  exp=10^exp
+  
+  stars <- get_stars_coords(space, expansion = exp)
+  as_tibble(stars) %>% 
+    mutate(row=row-mean(row),
+           col=col-mean(col),
+           time=exp,
+           group=row_number()) 
+})
+
+animation = stars_df %>%
+  ggplot(aes(x=col,y=row)) +
+  geom_point(shape=11,col='gold', aes(group=group)) +
+  theme_void() +
+  theme()
+  gganimate::transition_states(states = time, transition_length = 10,state_length = 1)
+
+gganimate::anim_save(
+  gganimate::animate(animation, rewind = T, duration = 5, fps=10, bg='transparent'),
+  file = "AoC2023/GIFs/day11.gif")
