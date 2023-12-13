@@ -8,8 +8,6 @@
 
 ## My visualizations
 
-#### Day2
-<img src="GIFs/day2.gif" width="250"/>
+#### Day2 Day6 Day8
+<img src="GIFs/day2.gif" width="300"/> <img src="GIFs/day6.png" width="300"/> <img src="GIFs/day8.gif" width="300"/>
 
-#### Day6
-<img src="GIFs/day6.png" width="250"/>
