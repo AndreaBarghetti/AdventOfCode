@@ -90,9 +90,9 @@ count_seqs_dp <- function(sequence,counts, cache) {
   }
   
   if (str_sub(sequence, 1, 1) %in% c("#", "?")) {
-    if (counts[1] <= nchar(sequence) && str_detect(substr(sequence, 1, counts[1]),"\\.", negate = T) &&
+    if (counts[1] <= nchar(sequence) && str_detect(str_sub(sequence, 1, counts[1]),"\\.", negate = T) &&
         (counts[1] == nchar(sequence) || str_sub(sequence, counts[1] + 1, counts[1] + 1) != "#")) {
-      result <- result + count_seqs_dp(str_sub(sequence, counts[1] + 2, nchar(sequence)), counts[-1], cache)
+      result <- result + count_seqs_dp(str_sub(sequence, counts[1] + 2, -1), counts[-1], cache)
     }
   }
   
@@ -103,7 +103,6 @@ count_seqs_dp <- function(sequence,counts, cache) {
 count_seqs2 <- function(springs) {
   
   cache <- rlang::env()
-  
   map_dbl(springs, function(spring) {
     count_seqs_dp(spring$sequence, spring$counts, cache)
   })
@@ -112,10 +111,6 @@ count_seqs2 <- function(springs) {
 
 result = sum(count_seqs2(springs2))
 
+count_seqs2(springs)
+
 format(result, scientific = F)
-
-
-springs2[[1]]$sequence
-
-
-
