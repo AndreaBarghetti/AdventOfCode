@@ -8,18 +8,7 @@
 
 ## My visualizations
 
-|||---|||
+<img src="GIFs/day1.png" width="300"/> <img src="GIFs/day2.gif" width="300"/> <img src="GIFs/day3.png" width="300"/> <img src="GIFs/day4.gif" width="300"/> <img src="GIFs/day5.gif" width="300"/> <img src="GIFs/day6.png" width="300"/> <img src="GIFs/day7.gif" width="300"/> <img src="GIFs/day8.gif" width="300"/>
 
-#### Day2
 
-<img src="GIFs/day2.gif" width="300"/>
 
-#### Day6
-
-<img src="GIFs/day6.png" width="300"/>
-
-#### day8
-
-<img src="GIFs/day8.gif" width="300"/>.
-
-|||---|||
