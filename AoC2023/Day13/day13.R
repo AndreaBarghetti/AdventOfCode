@@ -101,3 +101,34 @@ sum(map_int(scores2, ~{
   r+c
 }))
 
+# vis ####
+library(animation)
+
+show_simmetry = function(pattern) {
+  score = score_simmetry(list(pattern))[[1]]
+  df = mat_to_tibble(pattern)
+  
+  if (score$r>0){add_mirror = function(){
+    geom_hline(yintercept = max(df$y)-score$r+.5, col="red")
+  }}
+  if (score$c>0){add_mirror = function(){
+    geom_vline(xintercept = score$c+.5, col="red")
+  }}
+  
+  plot_matrix(pattern) +
+    add_mirror() +
+    scale_fill_manual(values=c("black","white"))
+}
+
+animation::saveGIF({
+  for (pattern in patterns){
+    print(show_simmetry(pattern))
+  }
+},
+interval=1,
+loop=T, 
+movie.name = "day13.gif",
+ani.width = 400,
+ani.height = 400,
+outdir = "AoC2023/GIFs/",
+clean = T)
