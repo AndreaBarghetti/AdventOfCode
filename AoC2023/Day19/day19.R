@@ -62,3 +62,50 @@ map_dbl(parts, function(part) {
 
 
 # Part 2 ####
+p_range = list(x=c(1,4000), m=c(1,4000), a=c(1,4000), s=c(1,4000))
+
+apply_rule2 = function(p_range, rule_name, rules) {
+  
+  if(rule_name=="A") {return(prod((map_int(p_range,diff)+1)))}
+  if(rule_name=="R") {return(0)}
+  
+  rule=rules[[rule_name]]
+  
+  for (r in rule) {
+    
+    if (!str_detect(r,":")) {
+      return(apply_rule2(p_range, r, rules))
+    }
+    
+    p = str_extract(r, "^[xmas]")
+    op = str_extract(r, "[<>]")
+    val = str_extract(r, "\\d+") %>% as.numeric()
+    to = str_extract(r, "\\w+$")
+    
+    if (val<=p_range[[p]][1] | val>=p_range[[p]][2]) {
+      
+      cond = do.call(op, args = list(p_range[[p]][1], val))
+      
+      if(cond) {
+        return(apply_rule2(p_range, to, rules))
+      } else {next}
+      
+    } else {
+      p_range1 <- p_range2 <- p_range
+      if (op=="<") {
+        p_range1[[p]][2] <- val-1
+        p_range2[[p]][1] <- val
+      } else {
+        p_range1[[p]][2] <- val
+        p_range2[[p]][1] <- val+1
+      }
+      
+      return(apply_rule2(p_range1, rule_name, rules) + apply_rule2(p_range2, rule_name, rules))
+    }
+
+  }
+  
+}
+
+apply_rule2(p_range, "in", rules) %>% 
+  format(scientific = F)
