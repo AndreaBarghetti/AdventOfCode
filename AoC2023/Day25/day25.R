@@ -45,7 +45,7 @@ connections_to_graph <- function(connections) {
 
 g = connections_to_graph(connections)
 
-# I have to clue how this works
+# I have no clue how this works
 clusters <- igraph::cluster_fluid_communities(g,2)
 
 clusters$membership %>% 
