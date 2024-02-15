@@ -1,4 +1,8 @@
-with open('input.txt') as file:
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+input_file_path = os.path.join(script_dir, 'input.txt')
+
+with open(input_file_path) as file:
     for line in file:
         dirs = [l.strip() for l in line.split(',')]
 
