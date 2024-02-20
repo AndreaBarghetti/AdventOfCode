@@ -41,7 +41,7 @@ with open(input_file_path) as rooms:
     real=0
     for room in rooms:
         real += is_real_room(room)
-    print('Part1: ' + str(real))
+    print('Part 1: ' + str(real))
 
 
 # part 2
