@@ -6,6 +6,7 @@ input_file_path = os.path.join(script_dir, 'input.txt')
 
 # part 1
 
+# realized later this already exists: np.roll
 def rotate(x, n):
     n = n % len(x)
     return np.concatenate((x[-n:], x[:-n]))
@@ -40,6 +41,8 @@ class Screen:
         for row in self.screen:
             row_str = ''.join('#' if cell == 1 else ' ' for cell in row)
             screen_str += row_str + "\n"
+        # could have been:
+        # screen_str = '\n'.join(''.join('#' if p else ' ' for p in line) for line in self.screen)
         return screen_str
     
     def run_code(self, input_file_path):
