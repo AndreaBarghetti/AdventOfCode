@@ -4,8 +4,6 @@ import regex as re
 script_dir = os.path.dirname(os.path.abspath(__file__))
 input_file_path = os.path.join(script_dir, 'input.txt')
 
-#input_file_path='day9/input.txt'
-
 with open(input_file_path) as file:
     code = file.read().splitlines() 
 code = code[0]
