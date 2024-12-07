@@ -1,63 +1,90 @@
-# dmatrix (Default matrix) return default values when
-# subset for out of bound index
-# note: negative indexes are also considered out of bound
-
-# Constructor function to create a dmatrix object
-dmatrix <- function(x = matrix(), default = NA) {
-  if (!is.matrix(x)) {
-    stop("Input must be a matrix")
+# Constructor for dmatrix
+dmatrix <- function(x = numeric(), nrow, ncol, default = NA) {
+  m <- matrix(x, nrow = nrow, ncol = ncol)
+  
+  if (storage.mode(m) != storage.mode(default)) {
+    stop(sprintf("The default value must have the same type as the matrix elements. Expected '%s', got '%s'.",
+                 storage.mode(m), storage.mode(default)))
   }
   
-  # Set class and attributes
-  structure(x,
-            class = c("dmatrix", "matrix"),
-            default = default)
+  attr(m, "default") <- default
+  class(m) <- c("dmatrix", "matrix")
+  m
+}
+
+as_dmatrix <- function(x, default = NA) {
+  if (!is.matrix(x)) {
+    stop("`x` must be a matrix.")
+  }
+  
+  # Check that the default value has the same type as the matrix elements
+  if (storage.mode(x) != storage.mode(default)) {
+    stop(sprintf("The default value must have the same type as the matrix elements. Expected '%s', got '%s'.",
+                 storage.mode(x), storage.mode(default)))
+  }
+  
+  attr(x, "default") <- default
+  class(x) <- c("dmatrix", "matrix")
+  x
 }
 
 
-# Custom method for the [ operator for dmatrix class
-`[.dmatrix` <- function(x, i, j, ...) {
-  # Get dimensions
-  nrows <- nrow(x)
-  ncols <- ncol(x)
+# Indexing method for dmatrix
+`[.dmatrix` <- function(x, i, j, drop = TRUE) {
+  default_val <- attr(x, "default")
+  nr <- nrow(x)
+  nc <- ncol(x)
   
-  # Get the default value
-  default_value <- attr(x, "default")
+  # Convert to base matrix to avoid recursive calls
+  base_x <- unclass(x)
   
   # Handle missing indices
-  if (missing(i)) i <- seq_len(nrows)
-  if (missing(j)) j <- seq_len(ncols)
+  if (missing(i) && missing(j)) {
+    # x[] just returns the whole object
+    return(x)
+  } else if (missing(i)) {
+    i <- seq_len(nr)
+  } else if (missing(j)) {
+    j <- seq_len(nc)
+  }
   
-  # Ensure i and j are numeric
   i <- as.integer(i)
   j <- as.integer(j)
   
-  # Handle single element access
-  if (length(i) == 1 && length(j) == 1) {
-    if (i >= 1 && i <= nrows && j >= 1 && j <= ncols) {
-      return(NextMethod())
-    } else {
-      return(default_value)
-    }
+  valid_i <- i[i >= 1 & i <= nr]
+  valid_j <- j[j >= 1 & j <= nc]
+  
+  # Prepare a result matrix filled with default values
+  res <- matrix(default_val, nrow = length(i), ncol = length(j))
+  
+  if (length(valid_i) > 0 && length(valid_j) > 0) {
+    # Index the underlying matrix (no recursion here)
+    submat <- base_x[valid_i, valid_j, drop = FALSE]
+    
+    # Map back to positions in res
+    row_map <- match(valid_i, i)
+    col_map <- match(valid_j, j)
+    res[row_map, col_map] <- submat
   }
   
-  # Create result matrix
-  result <- matrix(default_value, nrow = length(i), ncol = length(j))
-  
-  # Fill result matrix with the matrix elements or default values
-  # Vectorized assignment for values within bounds
-  valid_rows <- i >= 1 & i <= nrows
-  valid_cols <- j >= 1 & j <= ncols
-  
-  # Use outer product to get valid indices and assign values
-  valid_i <- i[valid_rows]
-  valid_j <- j[valid_cols]
-  result[valid_rows, valid_cols] <- x[valid_i, valid_j, drop = FALSE]
-  
-  return(result)
+  if (drop && (length(i) == 1 || length(j) == 1)) {
+    return(as.vector(res))
+  } else {
+    # Retain class information
+    # If you want the subset also to remain a dmatrix, you can keep it.
+    # Otherwise, if you only want the final returned object as a matrix, omit the next line.
+    # To return a dmatrix with the same default:
+    attr(res, "default") <- default_val
+    class(res) <- c("dmatrix", "matrix")
+    return(res)
+  }
 }
+
+dm <- dmatrix(1:9, nrow = 3, ncol = 3, default = as.integer(0))
 
 testthat::expect_equal(dm[1,1],1)
 testthat::expect_equal(dm[0,1],0)
 testthat::expect_equal(dm[1,4],0)
-testthat::expect_equal(dmatrix(matrix(0),0)[-1:1,-1:1],matrix(0,3,3))
+testthat::expect_equal(dm[-1:1,4],integer(length = 3))
+testthat::expect_equal(dmatrix(0,1,1,0)[-1:1,-1:1],dmatrix(0,3,3,0))
+
