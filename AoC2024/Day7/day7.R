@@ -1,5 +1,5 @@
 library(tidyverse)
-input <- read_lines("AoC2024/Day7/test.txt")
+input <- read_lines("AoC2024/Day7/input.txt")
 
 parse = function(input) {
   parse_line = function(line) {
@@ -17,30 +17,40 @@ input = parse(input)
 # Part 1 ####
 operators = list(`+`, `*`)
 
-try_operators = function(R, x, y, operators) {
-  for (o in operators) {
-    if (length(x)>1) {
-      R = do.call(o,list(R,x[1]))
-      return(try_operators(R,x[-1], y, operators))
-    } else {
-      R = do.call(o,list(R,x[1]))
-      if (R == y) {return(TRUE)} else {return(FALSE)} 
+try_operators = function(x, y, operators) {
+  # quickly avoid obvious FALSE
+  if ( any(x>y) ) { return(FALSE) }
+  if (sum(x[x!=1])>y)  { return(FALSE) }
+  
+  if (length(x)==1) {
+    return(x==y)
+  } else {
+    for (o in operators) {
+      r = do.call(o, list(x[1],x[2]))
+      nx = c(r, x[-c(1:2)])
+      if (try_operators(nx,y,operators)) {return(TRUE)}
     }
   }
+  return(FALSE)
 }
 
-map_lgl(input, ~{
-  try_operators(.x$x[1],.x$x[-1], .x$y, operators)
+test_passed = map_lgl(input, ~{
+  try_operators(.x$x, .x$y, operators)
 })
 
-
-check_equation = function(y,x) {
-  if ( any(x>y) ) { return(FALSE) }
-  if ( sum(x)>y ) { return(FALSE) }
-  return(TRUE)
-}
-
-
-
+map_dbl(input, ~.x$y)[test_passed] %>% sum()
 
 # Part 2 ####
+concat = function(x1,x2) {
+  as.numeric( paste0(x1,x2, collapse = "")) 
+}
+
+operators = list(concat, `*`, `+`)
+
+test_passed = map_lgl(input, ~{
+  try_operators(.x$x, .x$y, operators)
+})
+
+map_dbl(input, ~.x$y)[test_passed] %>% 
+  sum() %>% 
+  format(scientific = F)
