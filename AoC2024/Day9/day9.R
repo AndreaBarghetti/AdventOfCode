@@ -19,27 +19,24 @@ print_diskmap = function(diskmap) {
   pmap(list(seq_along(diskmap$blocks) - 1,
             diskmap$blocks, 
             c(diskmap$spaces,0)), function(i,b,s) {
-              c(rep(i,b),rep(".",s)) %>% str_c(collapse = "")
-            }) %>% 
-    str_c(collapse = "")
+              c(rep(i,b),rep(".",s))
+            }) %>% reduce(c)
 }
 
 compress = function(diskmap) {
   
   nspace = diskmap$spaces %>% sum()
-  disk = print_diskmap(diskmap) %>% str_split("", simplify = T)
+  disk = print_diskmap(diskmap)
   
   filling = rev(disk[disk != "."])[1:nspace]
   disk[disk == "."] <- filling
-  str_c(disk, collapse = "") %>% str_sub(1, -nspace - 1)
+  disk[1:(length(disk)-nspace)] %>% as.numeric()
 }
 
-compressed_disk = compress(diskmap) %>%
-  str_split("", simplify = T) %>% as.integer()
+compressed_disk = compress(diskmap)
 
 imap_dbl(compressed_disk, function(v,i) {(i - 1)*v}) %>% 
-  sum()
+  sum() %>% format(scientific = F)
 
-# 88217448737 too low
 
 # Part 2 ####
