@@ -48,6 +48,40 @@ remove_oob(antinodes, map) %>% nrow()
 
 # Part 2 ####
 get_antinodes2 = function(A1, A2) {
+ 
+  As = rbind(A1,A2) %>% as_tibble() 
+  m = lm(row~col,As)
+
+  cols = 1:ncol(map)
+  rows = predict(m, newdata=tibble(col = cols))
+  natnum = abs((rows - round(rows))) < 1e-12
+  inmap = round(rows) > 0 & round(rows)<=nrow(map)
+  
+  cbind(round(rows)[natnum&inmap], round(cols[natnum&inmap]))
   
 }
 
+antinodes_ls = map(antennas_ls, get_antinodes)
+
+antinodes = antinodes_ls %>% 
+  reduce(rbind) %>% 
+  unique()
+
+nrow(antinodes)
+
+
+##
+print_map = function(print_antinodes=T) {
+  
+  amap = map
+  if (print_antinodes) {
+    amap[antinodes]<-"#"
+    amap[map!="."]=map[map!="."]
+  }
+  apply(amap, 1, function(.x){
+    cat(str_c(.x, collapse = ""))
+    cat("\n")
+  })
+}
+
+print_map()
