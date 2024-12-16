@@ -57,6 +57,7 @@ print_map = function(map) {
       x=ifelse(x==0,".",as.character(x))
       cat(paste0(x, collapse = ""));cat("\n")
     })
+  invisible()
 }
 
 moved_robots = move_robots(robots, 100, map)
