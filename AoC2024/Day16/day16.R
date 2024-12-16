@@ -10,12 +10,11 @@ map = str_split(input,"", simplify = T)
 #   scale_fill_manual(values = c("white","black","red","red"))
 
 # Part 1 ####
-
-# works on example
-# must make it efficient to run on real input
 run_maze = function(map) { 
   
   best_score = Inf
+  
+  visited = matrix(F, nrow(map),ncol(map))
   
   moves = list(
     U = c(-1,0),
@@ -48,13 +47,13 @@ run_maze = function(map) {
                  dir = status$dir, 
                  score = status$score+1),
       
-      turnL = list(pos = status$pos, 
+      turnL = list(pos = status$pos + moves[[turn(status$dir, "L")]], 
                    dir = turn(status$dir, "L"), 
-                   score=status$score+1000),
+                   score=status$score+1001),
       
-      turnR = list(pos = status$pos, 
+      turnR = list(pos = status$pos + moves[[turn(status$dir, "R")]], 
                    dir = turn(status$dir, "R"), 
-                   score = status$score+1000)
+                   score = status$score+1001)
       
     )
   }
@@ -69,6 +68,8 @@ run_maze = function(map) {
     if (map[status$pos]=="#") {next}
     if (status$score>best_score) {next}
     if (map[status$pos]=="E") {best_score = status$score; next}
+    if (visited[status$pos]) {next}
+    visited[status$pos] <- T
     
     next_s = get_nexts(status)
     for (s in next_s) {
