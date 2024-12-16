@@ -70,9 +70,9 @@ move_robot = function(map, moves) {
   map
 }
 
-count_gps_score = function(map) {
+count_gps_score = function(map, box = 'O') {
   
-  boxes = which(map == "O", arr.ind = T)-1
+  boxes = which(map == box, arr.ind = T)-1
   apply(boxes,1,function(x) {100*x[1]+x[2]}) %>% 
     sum()
 }
@@ -81,13 +81,69 @@ move_robot(map, moves) %>%
   count_gps_score()
 
 # Part 2 ####
-double_width = function(x) {
-  map(x, ~{
-    if (.x=="O") {return(c("[","]"))}
-    if (.x==".") {return(c(".","."))}
-    if (.x=="#") {return(c("#","#"))}
-    if (.x=="@") {return(c("@","."))}
-  }) %>% unlist()
+double_width = function(map) {
+  
+  .double_width = function(x) {
+    map(x, ~{
+      if (.x=="O") {return(c("[","]"))}
+      if (.x==".") {return(c(".","."))}
+      if (.x=="#") {return(c("#","#"))}
+      if (.x=="@") {return(c("@","."))}
+    }) %>% unlist()
+  }
+  
+  t(apply(map,1,.double_width))
 }
-map2 = t(apply(map,1,double_width))
 
+try_move = function(map, move) {
+  
+  robot = which(map=="@", arr.ind = T)
+  visited = matrix(F, nrow = nrow(map),ncol = ncol(map))
+  
+  moves = list(">" = c(0,1),
+               "<" = c(0,-1),
+               "^" = c(-1,0),
+               "v" = c(1,0))
+  
+  m = moves[[move]]
+  #if not a box
+  if (map[robot+m]==".") { map[robot] ="."; map[robot+m] = "@"; return(map)}
+  if (map[robot+m]=="#") { return(map) }
+
+  # push boxes  
+  queue = collections::queue()
+  queue$push(robot)
+  
+  while(queue$size()>0) {
+    
+    p = queue$pop()
+    if (visited[p]) {next}
+    visited[p] = T
+    
+    np = p + m
+    
+    if (map[np] == "#") {return(map)}
+    if (map[np] == "[") { queue$push(np);  queue$push(np+c(0,1)) }
+    if (map[np] == "]") { queue$push(np);  queue$push(np+c(0,-1)) }
+    
+  }
+  moved_boxes = which(visited & map %in% c("[","]","@"), arr.ind = T)
+  boxes = map[moved_boxes]
+  map[moved_boxes] = "."
+  moved_boxes = t(t(moved_boxes) + m)
+  map[moved_boxes] = boxes
+  return(map)
+}
+
+move_robot = function(map, moves) {
+  
+  for (move in moves) {
+    map = try_move(map, move)
+  }
+  map
+}
+
+map2 = double_width(map)
+
+move_robot(map2, moves) %>% 
+  count_gps_score(box = "[")
