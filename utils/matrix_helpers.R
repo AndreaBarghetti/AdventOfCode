@@ -84,3 +84,22 @@ mat_expand <-  function(x,
   }
   return(x)
 }
+
+
+#' print_matrix
+#'
+#' @param matrix 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+print_matrix = function(matrix) {
+  matrix %>% 
+    apply(1, function(x){
+      cat(paste0(x, collapse = ""))
+      cat("\n")
+    })
+  cat("\n")
+  invisible(matrix)
+}
