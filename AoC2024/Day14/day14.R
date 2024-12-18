@@ -68,3 +68,36 @@ moved_robots %>%
   get_safety_factor()
 
 # Part 2 ####
+# check for an S x S square of 1s in a matrix
+check_square_of_ones <- function(mat, S) {
+  n <- nrow(mat)
+  m <- ncol(mat)
+  
+  for (i in 1:(n - S + 1)) {
+    for (j in 1:(m - S + 1)) {
+      submat <- mat[i:(i + S - 1), j:(j + S - 1)]
+      
+      if (all(submat == 1)) {
+        return(TRUE)  # Return TRUE as soon as we find a valid square
+      }
+    }
+  }
+  
+  return(FALSE)
+}
+
+for (i in 1:10000) {
+  
+  found = move_robots(robots, i, map) %>% 
+    locate_robots(map = map) %>% 
+    check_square_of_ones(S = 5)
+  
+  if (found){break}
+
+}
+
+print(i)
+
+move_robots(robots, i, map) %>% 
+  locate_robots(map = map) %>% 
+  print_map()
