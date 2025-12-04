@@ -9,3 +9,4 @@ My Advent of Code solutions
 [2022](./AoC2022/)
 [2023](./AoC2023/)
 [2024](./AoC2024/)
+[2025](./AoC2025/)
