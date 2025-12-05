@@ -39,7 +39,7 @@ count_fresh_ingredients(ingredients, ranges)
 
 # Part 2 ####
 reduce_ranges = function(ranges) {
-  
+
   mranges = ranges %>% 
     purrr::reduce(rbind)
   
@@ -48,15 +48,19 @@ reduce_ranges = function(ranges) {
   s = mranges[1,1]
   e = mranges[1,2]
   
-  reduced_ranges = list(c(s,e))
+  reduced_ranges = list()
   
-  i=2
-  while (i<nrow(mranges)) {
+  for (i in 2:nrow(mranges)) {
     cs = mranges[i,1]
     ce = mranges[i,2]
-    if (cs <= s & ce > e) {e = ce} else {
+    if (cs > e) {
       reduced_ranges = append(reduced_ranges, list(c(s,e)))
-      i=i+1; next
+      s=cs; e=ce
+    } else {
+      e = max(e, ce)
+      if (i == nrow(mranges)){
+        reduced_ranges = append(reduced_ranges, list(c(s,e)))
+      }
     }
   }
   
@@ -65,7 +69,9 @@ reduce_ranges = function(ranges) {
   
 }
 
-reduce_ranges(ranges) %>% 
-  apply(1,diff) %>% sum() %>% 
+reduced_ranges = reduce_ranges(ranges)
+
+sum(reduced_ranges[,2]-reduced_ranges[,1] + 1) %>% 
   format(scientific=F)
+
   
