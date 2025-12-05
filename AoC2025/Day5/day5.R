@@ -64,14 +64,14 @@ reduce_ranges = function(ranges) {
     }
   }
   
-  reduced_ranges %>% 
-    purrr::reduce(rbind)
+  reduced_ranges
   
 }
 
 reduced_ranges = reduce_ranges(ranges)
 
-sum(reduced_ranges[,2]-reduced_ranges[,1] + 1) %>% 
+map_dbl(reduced_ranges, ~{.x[2]-.x[1]+1}) %>% 
+  sum() %>% 
   format(scientific=F)
 
   
