@@ -16,8 +16,13 @@ mat_rotate <- function(x, n) {
   n=as.integer(n)
   if (!"matrix" %in% class(x)) {stop("x must be a matrix")}
   if (n==0) {return(x)}
+  
+  rotate_90 <- function(m) {
+    t(m)[, ncol(t(m)):1, drop = FALSE]
+  }
+  
   for (i in 1:n) {
-    x <- t(apply(x,2,rev))
+    x <- rotate_90(x)
   }
   x
 }
@@ -27,7 +32,7 @@ mat_rotate <- function(x, n) {
 #' @param x
 #' matrix
 #' @param axis
-#' one of "V", "H", "VH","HV". V= vertical, H = Horizontal
+#' one of "V", "H". V= vertical, H = Horizontal
 #' @return
 #' matrix
 #' @export
@@ -35,13 +40,19 @@ mat_rotate <- function(x, n) {
 #' @examples
 #' m <- matrix(1:4, nrow=2)
 #' mat_mirror(m, "H")
-mat_mirror <- function(x, axis = c("V", "H", "VH","HV")) {
-  match.arg(axis)
-  if (axis == "V") { x <- t(apply(x, 1, rev)) }
-  if (axis == "H") { x <- apply(x, 2, rev) }
-  if (axis %in% c("VH","HV")) { x <- mat_mirror(mat_mirror(x,"V"),"H") }
+mat_mirror <- function(x, axis = c("V", "H")) {
+  if (!is.matrix(x)) {stop('mat must be a matrix')}
   
-  return(x)
+  axis = match.arg(axis)
+  
+  nr <- nrow(x)
+  nc <- ncol(x)
+  
+  if (axis == "H") {
+    return(x[, nc:1, drop = FALSE])
+  } else if (axis == "V") {
+    return(x[nr:1, , drop = FALSE])
+  }
 }
 
 #' mat_expand
@@ -103,3 +114,47 @@ print_matrix = function(matrix) {
   cat("\n")
   invisible(matrix)
 }
+
+#' mat_all_rotations
+#'
+#' make a list with all possible rotations and mirrors of the matrix
+#'
+#' @param x matrix
+#' 
+#' @param mirror if allow flipping the matrix 
+#' 
+#' @param rotate if allow rotating the matrix 
+#'
+#' @param unique return only the unique matrices
+#'
+#' @return
+#' a list of matrices 
+#' @export
+#'
+mat_all_rotations = function(x, 
+                             mirror = T, 
+                             rotate = T, 
+                             unique = T) {
+  
+  if (!is.matrix(x)) {stop('mat must be a matrix')}
+  
+  res = list(x)
+  
+  if (!(mirror | rotate)) {return(res)}
+  
+  if (mirror) {
+    flipped = mat_mirror(x, 'H')
+    res = list(x, flipped)
+  }
+  
+  if (rotate) {
+    res = map(res, \(m){
+      map(c(0,1,2,3), ~mat_rotate(m, .x))
+    }) %>% unlist(recursive = F)
+  }
+  
+  if (unique) {res = unique(res)}
+  
+  res
+} 
+
