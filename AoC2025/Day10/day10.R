@@ -18,12 +18,12 @@ parse_machines = function(input) {
       button
     })
     
-    joltage_requirements = str_match(l, "\\{(.+)\\}")[2] %>% str_extract_all('\\d+', simplify = T) %>% 
+    target_joltage = str_match(l, "\\{(.+)\\}")[2] %>% str_extract_all('\\d+', simplify = T) %>% 
       as.integer()
     
     list(target_lights = lights,
          buttons = buttons,
-         joltage_requirements = joltage_requirements)
+         target_joltage = target_joltage)
   })
 }
 
@@ -39,14 +39,14 @@ start_machine = function(machine) {
   target_lights = machine$target_lights
   buttons = machine$buttons
   
-  state_cache <- new.env(hash = TRUE, parent = emptyenv())
-  
   lights = vector(length = length(target_lights))
   counter = 0
   
-  q = queue()
+  q = priority_queue()
   
-  q$push(list(lights=lights, counter = counter))
+  bpressed = vector(length = length(buttons))
+  
+  q$push(list(lights=lights, bpressed = bpressed, counter=counter), priority = -counter)
   
   repeat {
     
@@ -54,18 +54,18 @@ start_machine = function(machine) {
     
     if (all(state$lights == target_lights)) { return(state$counter) }
     
-    assign(get_state(state$lights) , state$counter, envir = state_cache)
-    
-    for (b in buttons) {
+    for (i in seq_along(buttons[!state$bpressed])) {
+      
+      b = buttons[!state$bpressed][[i]]
+      bpressed = state$bpressed
+      bpressed[i] = T
+      counter = state$counter + 1
       
       nx_lights = xor(state$lights,b)
 
-      if (!exists(get_state(nx_lights), envir = state_cache, inherits = FALSE)) {
-        
-        q$push(list(lights = nx_lights,
-               counter = state$counter + 1 ))
-        
-      }
+      q$push(list(lights = nx_lights, 
+                  counter= counter,
+                  bpressed = bpressed), priority = -counter)
       
     }
     
@@ -77,74 +77,60 @@ counters_pt1 = map_dbl(machines, start_machine)
 sum(counters_pt1)
 
 # Part 2 ####
+library(lpSolve)
+
+# I need to solve this system of equations
+# with constrains (integers >= 0)
+# and minimizing sum of parameters
+print_system = function(machine) {
+  
+  buttons = machine$buttons
+  target_joltage = machine$target_joltage
+  
+  L = paste0(imap_chr(buttons, ~paste0(sum(.x),"*",letters[.y])), collapse = ' + ')
+  R = sum(target_joltage)
+  for (i in seq_along(target_joltage)) {
+    r = target_joltage[i]
+    l = paste0(paste0(letters[which(map_lgl(buttons,i))]), collapse = " + ")
+    cat(paste(l,'=',r),'\n')
+  }
+  cat(paste(L,'=',R),'\n')
+}
+print_system(machine)
+
 configure_joltage = function(machine) {
   
-  target_joltage = machine$joltage_requirements
+  target_joltage = machine$target_joltage
   buttons = machine$buttons
-  # buttons = buttons[order(map_int(buttons,sum), decreasing = T)]
   
-  state_cache <- collections::dict()
+  num_vars = length(buttons)
   
-  joltage = vector(mode='integer', length = length(target_joltage))
-  counter = 0
-  min_counter = Inf
+  eq_system = map(seq_along(target_joltage), ~{
+    l = map_lgl(buttons,.x)
+    l
+  }) %>% do.call(rbind,.)
   
-  q = stack()
+  l = map_int(buttons, ~sum(.x))
+  eq_system = rbind(eq_system, l)
   
-  q$push(list(joltage=joltage, counter = counter))
+  # objective function: minimize sum of all variables
+  objective.in <- rep(1, num_vars)
   
-  while(q$size()>0) {
-    
-    state = q$pop()
-    
-    # if counter > min_counter, discard
-    if (state$counter >= min_counter) {next}
-    
-    # if target is exceeded , discard
-    if (any(state$joltage > target_joltage)) {next}
-    
-    # if target is reached, update min_counter
-    if (all(state$joltage == target_joltage)) { min_counter = min(min_counter, state$counter); next }
-    
-    # if same state is already reached: 
-    # - if counter is worse: discard
-    # - if counter is better: update
-    # otherwise assign new state
-    hash = get_state(state$joltage)
-    
-    if ( state_cache$has(hash) ) {
-      if (state$counter < state_cache$get(hash)) {
-        state_cache$set(hash, state$counter)
-      } else {next}
-    } else {
-      state_cache$set(hash, state$counter)
-    }
-    
-    for (b in buttons) {
-      # b=buttons[[1]]
-      
-      # for ( n in c(1,10,100)) {
-      #   q$push(list(joltage = state$joltage + b*n,
-      #               counter = state$counter + n ))
-      # }
-      
-      q$push(list(joltage = state$joltage + b,
-                  counter = state$counter + 1 ))
-      
-    }
-    
-  }
-  min_counter
+  # constraints
+  constraints <- matrix(0, nrow = num_vars, ncol = num_vars)
+  diag(constraints)<-1
+  
+  # constraint directions
+  const.dir <- c(rep("=", nrow(eq_system)), rep(">=", num_vars))
+  
+  const.mat = rbind(eq_system, constraints)
+  
+  const.rhs = c(target_joltage, sum(target_joltage), rep(0,num_vars))
+
+  res <- lp("min", objective.in, const.mat, const.dir, const.rhs, all.int = TRUE)
+  
+  return(res$objval)
 }
 
-# system.time({
-#   replicate(n = 100, configure_joltage(machines[[1]]))
-# })
-configure_joltage(machines[[1]])
-
 counters_pt2 = map_dbl(machines, configure_joltage)
-
 sum(counters_pt2)
-
-sum(machines[[1]]$joltage_requirements)
-machines[[1]]$buttons %>% map_int(sum)
