@@ -38,6 +38,7 @@ run_program = function(program, reg=c(a=0,b=0)) {
   }
   reg
 }
+# part 2 ----
 run_program(program, reg = c(a=1,b=0))
 
 

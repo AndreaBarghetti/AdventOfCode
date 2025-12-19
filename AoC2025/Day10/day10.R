@@ -2,7 +2,6 @@ library(tidyverse)
 library(collections)
 
 input <- read_lines("AoC2025/Day10/input.txt")
-input <- read_lines("AoC2025/Day10/test")
 
 parse_machines = function(input) {
   map(input, function(l) {
@@ -96,7 +95,6 @@ print_system = function(machine) {
   }
   cat(paste(L,'=',R),'\n')
 }
-print_system(machine)
 
 configure_joltage = function(machine) {
   
