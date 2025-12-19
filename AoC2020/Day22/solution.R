@@ -1,13 +1,12 @@
 library(tidyverse)
 
-
-input22 <- read_lines("Day22/input22.txt")
+input <- read_lines("AoC2020/Day22/input.txt")
 
 # * - part 1 - *####
-deck1 <- input22[2:26] %>% as.numeric()
-deck2 <- input22[29:53] %>% as.numeric()
+deck1 <- input[(which(input=="Player 1:")+1):(which(input=="")-1)] %>% as.numeric()
+deck2 <- input[(which(input=="Player 2:")+1):length(input)] %>% as.numeric()
 
-play_game <- function(deck1, deck2) {
+play_combat <- function(deck1, deck2) {
   while(length(deck1)!=0 & length(deck2)!=0) {
     
     c1 <- deck1[1]
@@ -23,105 +22,75 @@ play_game <- function(deck1, deck2) {
   winner <- c(deck1, deck2)
   return(winner)
 }
-end <- play_game(deck1, deck2)
+end <- play_combat(deck1, deck2)
 sum(end*seq_along(end) %>% sort(decreasing = T))
 
 # * - part 2 - *####
-deck1 <- c(9,2,6,3,1)
-deck2 <- c(5,8,4,7,10)
+library(collections)
 
-deck1 <- c(2,43,19)
-deck2 <- c(3,2,29,14)
+play_rcombat = function(deck1, deck2) {
 
-maxdepth <- 0
-depth <- 0
+  game = list(deck1 = deck1,
+              deck2 = deck2,
+              hist = collections::dict(),
+              winner=0)
+  
+  while (game$winner==0) {
+    
+    # avoid inf recursion
+    status=list(game$deck1,game$deck2)
+    
+    if (game$hist$has(status)) {
+      message('inf rec avoided!!!')
+      game$winner=1
+      return(game)
+    } else {
+      game$hist$set(status,T)
+    }
+    
+    next_round = play_round(game)
+    game$deck1 = next_round$deck1
+    game$deck2 = next_round$deck2
 
-play_rgame <- function(deck1, deck2, subgame=F) {
-  
-  if (!exists("i")) {i <- 0}
-  
-  if (!exists("past_decks1")) {past_decks1 <- list()}
-  if (!exists("past_decks2")) {past_decks2 <- list()}
-  
-  while(length(deck1)!=0 & length(deck2)!=0) {
-    
-    i<-i+1
-    
-    cat(paste("round",i, "\n"))
-    cat("deck1:", deck1, "\ndeck2:",deck2, "\n")
-    
-    if (any(map2_lgl(past_decks1,past_decks2, function(d1,d2) identical(d1,deck1) & identical(d2,deck2)))) {
-      win <- "deck1"
-      assign("win", "deck1", pos = parent.frame(n = 1))
-      print("looped")
-      break
-    }
-    
-    past_decks1[[length(past_decks1)+1]] <- deck1
-    past_decks2[[length(past_decks2)+1]] <- deck2
-    
-    c1 <- deck1[1]
-    c2 <- deck2[1]
-    
-    if (c1>c2) {
-      win <- "deck1"
-    }
-    else if (c2>c1) {
-      win <- "deck2"
-    }
-    
-    else {stop("tie?")}
-    
-    cat(paste("t0:", win, "\n"))
-    
-    if (c1<=(length(deck1)-1) & c2 <= (length(deck2)-1)) {
-      # subgame
-      assign("depth", depth+1, envir = .GlobalEnv)
-      assign("maxdepth", max(depth, maxdepth), envir = .GlobalEnv)
-      play_rgame(deck1[2:(c1+1)], deck2[2:(c2+1)], subgame = T)
-    }
-    
-    cat(paste("t1:", win, "\n"))
-    
-    deck1 <- deck1[-1]
-    deck2 <- deck2[-1]
-    
-    if (win=="deck2") {
-      get <- c(c2, c1)
-      deck2 <- append(deck2, get)
-    }
-    
-    else if (win=="deck1") {
-      get <- c(c1, c2)
-      deck1 <- append(deck1, get)
-    }
-    
-    else {stop("no winner ?")}
-    
+    if (length(game$deck1)<=0) {game$winner=2}
+    if (length(game$deck2)<=0) {game$winner=1}
   }
-  
-  if (length(deck1)==0) {
-    cat("deck1 is 0 \n")
-    assign("win", "deck2", pos = parent.frame(n = 1))
-  }
-  
-  if (length(deck2)==0) {
-    cat("deck2 is 0 \n")
-    assign("win", "deck1", pos = parent.frame(n = 1))
-  }
-  
-  print(paste(win, "won"))
-  
-  assign("depth", depth-1, envir = .GlobalEnv)
-  
-  if (!subgame) {
-    winner <- c(deck1, deck2)
-    return(winner)
-  }
+  game
 }
 
-maxdepth
-depth
+play_round = function(game) {
+  
+  deck1 = game$deck1
+  deck2 = game$deck2
+  
+  if (length(deck1)==0 | length(deck2)==0) {return(game)}
 
-end <- play_rgame(deck1, deck2)
-sum(end*seq_along(end) %>% sort(decreasing = T))
+  # deal cards
+  c1 = deck1[1]; deck1=deck1[-1]
+  c2 = deck2[1]; deck2=deck2[-1]
+  
+  # no recursive combat:
+  if (c1>length(deck1) | c2>length(deck2) ) {
+    winner = ifelse(c1>c2,1,2)
+  } else {
+    # recursive combat:
+    winner = play_rcombat(deck1[1:c1], deck2[1:c2])$winner
+  }
+  
+  if (winner==1) {
+    bottom_cards = c(c1,c2)
+    deck1 = c(deck1, bottom_cards)
+  } else {
+    bottom_cards = c(c2,c1)
+    deck2 = c(deck2, bottom_cards)
+  }
+  
+  game$deck1 = deck1
+  game$deck2 = deck2
+  
+  return(game)
+}
+
+endgame = play_rcombat(deck1,deck2)
+deck = endgame[[endgame$winner]]
+sum(deck * length(deck):1)
