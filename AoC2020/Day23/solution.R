@@ -1,10 +1,8 @@
 library(tidyverse)
 
-input23 <- c(1,2,3,4,8,7,5,9,6)
-
+cups <- c(1,2,3,4,8,7,5,9,6)
 
 # * - part 1 - *####
-cups <- input23
 
 play_cups <- function(cups, rounds) {
   
@@ -30,10 +28,10 @@ play_cups <- function(cups, rounds) {
   return(cups)
 }
 
-play_cups(cups = cups, rounds = 100)
+movedcups = play_cups(cups = cups, rounds = 100)
+
+movedcups[c((which(movedcups==1)+1):length(cups),1:(which(movedcups==1)-1))] %>% 
+  paste0(collapse = '')
 
 # * - part 2 - *####
-cups2 <- c(cups, 10:1000000)
 
-play_cups2 <- function(cups, rounds) {}
-play_cups2(cups2 = cups, rounds = 1e7)
