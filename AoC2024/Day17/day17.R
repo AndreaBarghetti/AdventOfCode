@@ -117,7 +117,67 @@ computer$run()
 
 # Part 2 ####
 
+# brute force works on example only...
 
+Computer$set("public", "reset", function(A) {
+  self$pointer=1
+  self$A=A
+  self$B=0
+  self$C=0
+  self$output = integer(0)
+})
+
+Computer$set("public", "test", function() {
+  return(identical(self$output, self$program[seq_along(self$output)]))
+})
+
+# Computer$set("public", "run2", function() {
+#   while(self$pointer < length(self$program)) {
+#     self$do()
+#     if (!isTRUE(self$test())){break}
+#   }
+#   return(identical(self$output, self$program))
+# })
+
+computer = Computer$new(settings$A,
+                        settings$B,
+                        settings$C,
+                        settings$program)
+
+# init = 25986278
+Is = integer(length = 3)
+n=1
+for (i in 1:10000) {
+  if(n>3){break}
+  computer$reset(i)
+  computer$run()
+  test = computer$output == computer$program[seq_along(computer$output)]
+  if (length(test) >= n) {
+    if (all(test[1:n])) {Is[n]=i;n=n+1;next}
+  }
+}
+
+walk(Is, \(x) print(int_to_binary_32bit(x)))
+int_to_binary_32bit(117440)
+
+
+computer$reset(init)
+computer$run()
+computer$output
+computer$output == computer$program[seq_along(computer$output)]
+init = init + 8
+
+init = 2
+int_to_binary_32bit(117440)
+init = binary_32bit_to_int("00000001100011001000010011100110")
+
+while (!computer$run2()) {
+  init = init+1
+  print(init)
+  computer$reset(init)
+  computer$run2()
+}
+print(init)
 
 
 
